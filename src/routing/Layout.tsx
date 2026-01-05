@@ -9,7 +9,7 @@ export default function Layout() {
       <div className="flex w-full h-screen">
         <SideBar />
 
-        <div className="shadow-lg flex flex-col w-full">
+        <div className="shadow-lg flex flex-col w-full bg-[oklch(98%_0.016_73.684)] ">
           <NavBar />
           <Outlet />
         </div>
