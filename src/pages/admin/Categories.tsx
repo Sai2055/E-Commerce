@@ -12,16 +12,21 @@ export default function Categories() {
 
   useEffect(() => {
     axios
-      .get("https://dummyjson.com/products")
-      .then((res) => setProductData(res.data.products));
+      .get(
+        "https://ohwdqklamwslzrhgkvup.supabase.co/rest/v1/categories?apikey=sb_publishable_oYJBmQoJ8OvVZyieB_B_ZQ_Dblx7GSy"
+      )
+      .then((res) => {
+        console.log(res.data);
+        setProductData(res.data);
+      });
   }, []);
-
+  console.log("Productdata1", productData);
   return (
     <div
       className="flex p-8 justify-between flex-col relative
     "
     >
-      <div className=" flex justify-between">
+      <div className=" flex justify-between ">
         <div className="text-2xl">Category</div>
         <div className="flex gap-6">
           <button className="flex bg-red-400 px-4 py-2 text-md items-center gap-4 rounded-lg">
@@ -54,7 +59,10 @@ export default function Categories() {
             </div>
           </div>
           {isAddCategoryOpen && (
-            <AddCategory setIsAddCategoryOpen={setIsAddCategoryOpen} />
+            <AddCategory
+              setIsAddCategoryOpen={setIsAddCategoryOpen}
+              productData={productData}
+            />
           )}
           <div className="h-[300px] overflow-auto">
             <table className="table-auto w-full border-collapse">
@@ -75,8 +83,8 @@ export default function Categories() {
                       <input type="checkbox" />
                     </td>
                     <td className="px-4 py-2">{item.id}</td>
-                    <td className="px-4 py-2">{item.title}</td>
-                    <td className="px-4 py-2">{item.category}</td>
+                    <td className="px-4 py-2">{item.name}</td>
+                    <td className="px-4 py-2">{item.parent}</td>
                   </tr>
                 ))}
               </tbody>
