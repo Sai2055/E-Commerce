@@ -5,6 +5,7 @@ import { useState } from "react";
 export default function AddCategory({ setIsAddCategoryOpen, productData }) {
   const [parentCategory, setParentCategory] = useState(null);
   const [categoryName, setCategoryName] = useState(null);
+  const [error, setError] = useStat({ nameError: "" });
   function handleCloseCategory() {
     setIsAddCategoryOpen(false);
   }
@@ -18,10 +19,14 @@ export default function AddCategory({ setIsAddCategoryOpen, productData }) {
   // console.log("productData", productData);
 
   function AddCategory() {
-    axios.post(
-      "https://ohwdqklamwslzrhgkvup.supabase.co/rest/v1/categories?apikey=sb_publishable_oYJBmQoJ8OvVZyieB_B_ZQ_Dblx7GSy",
-      { name: { categoryName }, parentCategory: { parentCategory } }
-    );
+    if (categoryName.trim() === "") {
+      setError((prev) => ({ ...prev, nameError: "Name is Required" }));
+    } else {
+      axios.post(
+        "https://ohwdqklamwslzrhgkvup.supabase.co/rest/v1/categories?apikey=sb_publishable_oYJBmQoJ8OvVZyieB_B_ZQ_Dblx7GSy",
+        { name: categoryName, parentCategory: parentCategory }
+      );
+    }
   }
 
   return (
@@ -42,15 +47,16 @@ export default function AddCategory({ setIsAddCategoryOpen, productData }) {
             onChange={handelCategoryName}
           />
         </div>
+        {error.nameError && <p>{error.nameError}</p>}
         {/* <div className="flex justify-between">
-          <label htmlFor="" className="font-bold">
-            Description
-          </label>
-          <input
-            type="text"
-            className="border boder-gray-300 w-[300px] h-[80px]"
-          />
-        </div> */}
+            <label htmlFor="" className="font-bold">
+              Description
+            </label>
+            <input
+              type="text"
+              className="border boder-gray-300 w-[300px] h-[80px]"
+            />
+          </div> */}
         <div className="flex justify-between">
           <label htmlFor="" className="font-bold">
             Parenet Category
@@ -71,14 +77,14 @@ export default function AddCategory({ setIsAddCategoryOpen, productData }) {
           {/* <input type="text"  /> */}
         </div>
         {/* <div className="flex justify-between">
-          <label htmlFor="" className="font-bold">
-            Category Image
-          </label>
-          <input
-            type="text"
-            className="border boder-gray-300 w-[300px] h-[80px]"
-          />
-        </div> */}
+            <label htmlFor="" className="font-bold">
+              Category Image
+            </label>
+            <input
+              type="text"
+              className="border boder-gray-300 w-[300px] h-[80px]"
+            />
+          </div> */}
       </div>
       <div className="flex justify-between p">
         <button
