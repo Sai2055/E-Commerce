@@ -1,11 +1,15 @@
 import axios from "axios";
 import { X } from "lucide-react";
 import { useState } from "react";
-
-export default function AddCategory({ setIsAddCategoryOpen, productData }) {
+import { Api_key } from "../../../constants/ApiKey";
+export default function AddCategory({
+  setIsAddCategoryOpen,
+  productData,
+  setProductData,
+}) {
   const [parentCategory, setParentCategory] = useState(null);
   const [categoryName, setCategoryName] = useState(null);
-  const [error, setError] = useStat({ nameError: "" });
+  const [error, setError] = useState({ nameError: "" });
   function handleCloseCategory() {
     setIsAddCategoryOpen(false);
   }
@@ -18,14 +22,27 @@ export default function AddCategory({ setIsAddCategoryOpen, productData }) {
   }
   // console.log("productData", productData);
 
-  function AddCategory() {
+  function handleAddCategory() {
     if (categoryName.trim() === "") {
       setError((prev) => ({ ...prev, nameError: "Name is Required" }));
     } else {
-      axios.post(
-        "https://ohwdqklamwslzrhgkvup.supabase.co/rest/v1/categories?apikey=sb_publishable_oYJBmQoJ8OvVZyieB_B_ZQ_Dblx7GSy",
-        { name: categoryName, parentCategory: parentCategory }
-      );
+      axios
+        .post(
+          "https://ohwdqklamwslzrhgkvup.supabase.co/rest/v1/categories",
+          { name: categoryName, parent_id: parentCategory },
+          {
+            headers: {
+              apikey: Api_key,
+              Authorization: `bearer Api_key`,
+              "Content-Type": "application/json",
+              Prefer: "return=representation",
+            },
+          }
+        )
+        .then((res) => {
+          setProductData((prev) => [...prev, res.data[0]]);
+          setIsAddCategoryOpen(false);
+        });
     }
   }
 
@@ -47,16 +64,16 @@ export default function AddCategory({ setIsAddCategoryOpen, productData }) {
             onChange={handelCategoryName}
           />
         </div>
-        {error.nameError && <p>{error.nameError}</p>}
+        {error && <p>error.nameError</p>}
         {/* <div className="flex justify-between">
-            <label htmlFor="" className="font-bold">
-              Description
-            </label>
-            <input
-              type="text"
-              className="border boder-gray-300 w-[300px] h-[80px]"
-            />
-          </div> */}
+          <label htmlFor="" className="font-bold">
+            Description
+          </label>
+          <input
+            type="text"
+            className="border boder-gray-300 w-[300px] h-[80px]"
+          />
+        </div> */}
         <div className="flex justify-between">
           <label htmlFor="" className="font-bold">
             Parenet Category
@@ -77,14 +94,14 @@ export default function AddCategory({ setIsAddCategoryOpen, productData }) {
           {/* <input type="text"  /> */}
         </div>
         {/* <div className="flex justify-between">
-            <label htmlFor="" className="font-bold">
-              Category Image
-            </label>
-            <input
-              type="text"
-              className="border boder-gray-300 w-[300px] h-[80px]"
-            />
-          </div> */}
+          <label htmlFor="" className="font-bold">
+            Category Image
+          </label>
+          <input
+            type="text"
+            className="border boder-gray-300 w-[300px] h-[80px]"
+          />
+        </div> */}
       </div>
       <div className="flex justify-between p">
         <button
@@ -93,7 +110,12 @@ export default function AddCategory({ setIsAddCategoryOpen, productData }) {
         >
           Cancel
         </button>
-        <button className="bg-green-500 w-[48%] px-8 py-2">Add Category</button>
+        <button
+          className="bg-green-500 w-[48%] px-8 py-2"
+          onClick={handleAddCategory}
+        >
+          Add Category
+        </button>
       </div>
     </div>
   );
