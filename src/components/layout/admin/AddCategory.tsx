@@ -9,6 +9,7 @@ export default function AddCategory({
 }) {
   const [parentCategory, setParentCategory] = useState(null);
   const [categoryName, setCategoryName] = useState(null);
+  const [error, setError] = useState({ nameError: "" });
   function handleCloseCategory() {
     setIsAddCategoryOpen(false);
   }
@@ -22,23 +23,27 @@ export default function AddCategory({
   // console.log("productData", productData);
 
   function handleAddCategory() {
-    axios
-      .post(
-        "https://ohwdqklamwslzrhgkvup.supabase.co/rest/v1/categories",
-        { name: categoryName, parent_id: parentCategory },
-        {
-          headers: {
-            apikey: Api_key,
-            Authorization: `bearer Api_key`,
-            "Content-Type": "application/json",
-            Prefer: "return=representation",
-          },
-        }
-      )
-      .then((res) => {
-        setProductData((prev) => [...prev, res.data[0]]);
-        setIsAddCategoryOpen(false);
-      });
+    if (categoryName.trim() === "") {
+      setError((prev) => ({ ...prev, nameError: "Name is Required" }));
+    } else {
+      axios
+        .post(
+          "https://ohwdqklamwslzrhgkvup.supabase.co/rest/v1/categories",
+          { name: categoryName, parent_id: parentCategory },
+          {
+            headers: {
+              apikey: Api_key,
+              Authorization: `bearer Api_key`,
+              "Content-Type": "application/json",
+              Prefer: "return=representation",
+            },
+          }
+        )
+        .then((res) => {
+          setProductData((prev) => [...prev, res.data[0]]);
+          setIsAddCategoryOpen(false);
+        });
+    }
   }
 
   return (
@@ -59,6 +64,7 @@ export default function AddCategory({
             onChange={handelCategoryName}
           />
         </div>
+        {error && <p>error.nameError</p>}
         {/* <div className="flex justify-between">
           <label htmlFor="" className="font-bold">
             Description
