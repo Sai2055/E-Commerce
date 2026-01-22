@@ -1,4 +1,4 @@
-import { Plus, Trash } from "lucide-react";
+import { Plus, Search, Trash } from "lucide-react";
 import AddCategory from "../../components/layout/admin/AddCategory";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -8,14 +8,18 @@ export default function Categories() {
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [productData, setProductData] = useState([]);
   const [selectedId, setSelectedId] = useState([]);
-  const [searchInput, setSearchInput] = useState(null);
+  const [searchInput, setSearchInput] = useState("");
   const [FilteredSearch, setFilteredSearch] = useState(productData);
+  const [selectAll, setSelectAll] = useState(false);
 
   useEffect(() => {
     axios
-      .get(
-        "https://ohwdqklamwslzrhgkvup.supabase.co/rest/v1/categories?apikey=sb_publishable_oYJBmQoJ8OvVZyieB_B_ZQ_Dblx7GSy"
-      )
+      .get("https://ohwdqklamwslzrhgkvup.supabase.co/rest/v1/categories", {
+        headers: {
+          apikey: Api_key,
+          Authorization: `Bearer ${Api_key}`,
+        },
+      })
       .then((res) => {
         console.log(res.data);
         setProductData(res.data);
@@ -28,9 +32,15 @@ export default function Categories() {
   }
   function handleCheckBoxChange(id, checked) {
     if (checked) {
-      setSelectedId((prev) => [...prev, id]);
+      const updated = [...selectedId, id];
+      setSelectedId(updated);
+      if (updated.length === selectedId.length) {
+        setSelectAll(true);
+      }
     } else {
-      setSelectedId((prev) => prev.filter((itemId) => itemId !== id));
+      const updated = selectedId.filter((itemId) => itemId !== id);
+      setSelectedId(updated);
+      setSelectAll(false);
     }
   }
 
@@ -43,11 +53,17 @@ export default function Categories() {
             headers: {
               apikey: Api_key,
               Authorization: `Bearer ${Api_key}`,
+              Prefer: "return=minimal",
+              "Content-Type": "application/json",
             },
           }
         )
         .then(() => {
-          setProductData((prev) => prev.filter((item) => item.id !== id));
+          setProductData((prev) => {
+            const updated = prev.filter((item) => item.id !== id);
+            setFilteredSearch(updated);
+            return updated;
+          });
         });
     });
   }
@@ -59,6 +75,22 @@ export default function Categories() {
       item.name.toLowerCase().includes(value.toLowerCase())
     );
     setFilteredSearch(filteredData);
+  }
+
+  function handleReset() {
+    setFilteredSearch(productData);
+    setSearchInput("");
+  }
+
+  function handleSelectAll(e) {
+    const checked = e.target.checked;
+    setSelectAll(checked);
+    if (checked) {
+      const allIds = FilteredSearch.map((item) => item.id);
+      setSelectedId(allIds);
+    } else {
+      setSelectedId([]);
+    }
   }
   return (
     <div
@@ -88,15 +120,20 @@ export default function Categories() {
           <div className="flex justify-between py-5">
             <input
               type="text"
+              value={searchInput}
               placeholder="Search by Category name"
               onChange={handleSearch}
-              className="border border-black px-4 py-1 w-[600px] pr-12"
+              className="relative border border-black px-4 py-1 w-[600px] pr-12"
             />
+            <Search className="pt-2 absolute left-[640px] text-gray-500" />
             <div className="flex gap-6">
               <button className="px-4 py-1 bg-green-400  rounded-lg">
                 Filter
               </button>
-              <button className="px-4 py-1 bg-gray-400  rounded-lg">
+              <button
+                className="px-4 py-1 bg-gray-400  rounded-lg"
+                onClick={handleReset}
+              >
                 Reset
               </button>
             </div>
@@ -113,7 +150,11 @@ export default function Categories() {
               <thead className="bg-gray-100 border border-gray-200">
                 <tr className="font-bold text-left">
                   <th className="px-4 py-2">
-                    <input type="checkbox" />
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                    />
                   </th>
                   <th className="px-4 py-2">Id</th>
                   <th className="px-4 py-2">Name</th>
@@ -121,22 +162,34 @@ export default function Categories() {
                 </tr>
               </thead>
               <tbody>
-                {FilteredSearch.map((item, index) => (
-                  <tr key={index} className="border-t">
-                    <td className="px-4 py-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedId.includes(item.id)}
-                        onChange={(e) =>
-                          handleCheckBoxChange(item.id, e.target.checked)
-                        }
-                      />
-                    </td>
-                    <td className="px-4 py-2">{item.id}</td>
-                    <td className="px-4 py-2">{item.name}</td>
-                    <td className="px-4 py-2">{item.parent_id}</td>
-                  </tr>
-                ))}
+                {FilteredSearch.length === 0 ? (
+                  <>
+                    {[...Array(6)].map((_, i) => (
+                      <tr key={i}>
+                        <td colSpan="4">
+                          <div className="shimmer h-10 w-full my-2"></div>
+                        </td>
+                      </tr>
+                    ))}
+                  </>
+                ) : (
+                  FilteredSearch.map((item, index) => (
+                    <tr key={index} className="border-t">
+                      <td className="px-4 py-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedId.includes(item.id)}
+                          onChange={(e) =>
+                            handleCheckBoxChange(item.id, e.target.checked)
+                          }
+                        />
+                      </td>
+                      <td className="px-4 py-2">{item.id}</td>
+                      <td className="px-4 py-2">{item.name}</td>
+                      <td className="px-4 py-2">{item.parent_id}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

@@ -8,7 +8,7 @@ export default function AddCategory({
   setProductData,
 }) {
   const [parentCategory, setParentCategory] = useState(null);
-  const [categoryName, setCategoryName] = useState(null);
+  const [categoryName, setCategoryName] = useState("");
   const [error, setError] = useState({ nameError: "" });
   function handleCloseCategory() {
     setIsAddCategoryOpen(false);
@@ -23,9 +23,11 @@ export default function AddCategory({
   // console.log("productData", productData);
 
   function handleAddCategory() {
-    if (categoryName.trim() === "") {
+    if (!categoryName.trim()) {
       setError((prev) => ({ ...prev, nameError: "Name is Required" }));
+      return;
     } else {
+      setError({ nameError: "" });
       axios
         .post(
           "https://ohwdqklamwslzrhgkvup.supabase.co/rest/v1/categories",
@@ -33,7 +35,7 @@ export default function AddCategory({
           {
             headers: {
               apikey: Api_key,
-              Authorization: `bearer Api_key`,
+              Authorization: `bearer ${Api_key}`,
               "Content-Type": "application/json",
               Prefer: "return=representation",
             },
@@ -64,11 +66,11 @@ export default function AddCategory({
             onChange={handelCategoryName}
           />
         </div>
-        {error && <p>error.nameError</p>}
+        {error.nameError && <p className="text-red-700">{error.nameError}</p>}
         {/* <div className="flex justify-between">
           <label htmlFor="" className="font-bold">
             Description
-          </label>
+          </label>  
           <input
             type="text"
             className="border boder-gray-300 w-[300px] h-[80px]"
