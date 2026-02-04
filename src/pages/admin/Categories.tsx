@@ -3,6 +3,7 @@ import AddCategory from "../../components/layout/admin/AddCategory";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Api_key } from "../../constants/ApiKey";
+import getCategories from "../../services/admin/Categories/categories.services";
 
 export default function Categories() {
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
@@ -13,18 +14,13 @@ export default function Categories() {
   const [selectAll, setSelectAll] = useState(false);
 
   useEffect(() => {
-    axios
-      .get("https://ohwdqklamwslzrhgkvup.supabase.co/rest/v1/categories", {
-        headers: {
-          apikey: Api_key,
-          Authorization: `Bearer ${Api_key}`,
-        },
-      })
-      .then((res) => {
-        console.log(res.data);
-        setProductData(res.data);
-        setFilteredSearch(res.data);
-      });
+    async function fetchCategories() {
+      const data = await getCategories();
+      console.log(data);
+      setProductData(data);
+      setFilteredSearch(data);
+    }
+    fetchCategories();
   }, []);
   // console.log("Productdata1", productData);
   function handleAddCategoryModal() {
@@ -56,7 +52,7 @@ export default function Categories() {
               Prefer: "return=minimal",
               "Content-Type": "application/json",
             },
-          }
+          },
         )
         .then(() => {
           setProductData((prev) => {
@@ -72,7 +68,7 @@ export default function Categories() {
     const value = e.target.value;
     setSearchInput(value);
     const filteredData = productData.filter((item) =>
-      item.name.toLowerCase().includes(value.toLowerCase())
+      item.name.toLowerCase().includes(value.toLowerCase()),
     );
     setFilteredSearch(filteredData);
   }
@@ -85,6 +81,7 @@ export default function Categories() {
   function handleSelectAll(e) {
     const checked = e.target.checked;
     setSelectAll(checked);
+    console.log(checked);
     if (checked) {
       const allIds = FilteredSearch.map((item) => item.id);
       setSelectedId(allIds);
