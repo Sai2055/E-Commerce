@@ -1,7 +1,9 @@
+import Login from "../../auth/Login";
+
 export default function Customers() {
   return (
     <div>
-      <div>Customers page</div>
+      <Login />
     </div>
   );
 }

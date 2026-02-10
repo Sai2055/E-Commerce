@@ -3,8 +3,15 @@ import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Api_key } from "../../../constants/ApiKey";
 import getCategories from "../../../services/admin/Categories/categories.services";
+import { supabase } from "../../../services/admin/products/SupabaseClient";
 
-export default function AddProduct({ setIsAddProduct, setProductData }) {
+// import {createClient} from "@supabase/supabase-js";
+
+export default function AddProduct({
+  setIsAddProduct,
+  setProductData,
+  setFilterData,
+}) {
   const [productDetails, setProductDetails] = useState({
     name: "",
     description: "",
@@ -12,7 +19,9 @@ export default function AddProduct({ setIsAddProduct, setProductData }) {
     price: "",
     stock: "",
   });
+  const [productImage, setProductImage] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [productImageUrl, setProductImageUrl] = useState("");
   function handleCloseProduct() {
     setIsAddProduct(false);
   }
@@ -30,17 +39,16 @@ export default function AddProduct({ setIsAddProduct, setProductData }) {
     // console.log("categoriesList" + categories);
   }, []);
   // console.log(productDetails);
-  function handleAddProduct() {
+  async function handleAddProduct() {
+    const imageUrl = await uploadImage(productImage);
+    const payload = {
+      ...productDetails,
+      image: imageUrl,
+    };
     axios
       .post(
         "https://ohwdqklamwslzrhgkvup.supabase.co/rest/v1/products",
-        {
-          name: productDetails.name,
-          description: productDetails.description,
-          price: productDetails.price,
-          stock: productDetails.stock,
-          category_id: productDetails.category_id,
-        },
+        payload,
         {
           headers: {
             apikey: Api_key,
@@ -51,10 +59,37 @@ export default function AddProduct({ setIsAddProduct, setProductData }) {
         },
       )
       .then((res) => {
-        setProductData((prev) => [...prev, res.data[0]]);
+        setFilterData((prev) => [...prev, res.data[0]]);
         setIsAddProduct(false);
       });
   }
+
+  async function uploadImage(file) {
+    if (!file) {
+      return "";
+    }
+
+    const fileName = `${Date.now()}-${file.name}`;
+
+    const { error } = await supabase.storage
+      .from("product-images")
+      .upload(fileName, file);
+
+    if (error) throw error;
+    const { data } = await supabase.storage
+      .from("product-images")
+      .getPublicUrl(fileName);
+
+    return data.publicUrl;
+  }
+
+  function handleImageChange(e) {
+    const file = e.target.files[0];
+    setProductImage(file);
+    const prevViewUrl = URL.createObjectURL(file);
+    setProductImageUrl(prevViewUrl);
+  }
+
   return (
     <div className="flex flex-col gap-6 bg-gray-300 w-[60%] p-8 absolute top-0 right-0 shadow-xl">
       <div className="flex justify-between  border-b-1">
@@ -101,6 +136,23 @@ export default function AddProduct({ setIsAddProduct, setProductData }) {
             onChange={handleProductDetails}
             className="w-[70%] py-2 px-4"
           />
+        </div>
+        <div
+          className="flex
+            justify-between w-full"
+        >
+          <label htmlFor="" className="w-[30%] font-bold">
+            Product Image:
+          </label>{" "}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="w-[64%] py-2 px-4 bg-white"
+          />
+          {productImageUrl && (
+            <img src={productImageUrl} className="h-12 w-10 object-cover" />
+          )}
         </div>
         <div
           className="flex

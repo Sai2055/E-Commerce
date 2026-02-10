@@ -12,10 +12,13 @@ export default function Categories() {
   const [searchInput, setSearchInput] = useState("");
   const [FilteredSearch, setFilteredSearch] = useState(productData);
   const [selectAll, setSelectAll] = useState(false);
+  const [isShimmer, setIsShimmer] = useState(false);
 
   useEffect(() => {
     async function fetchCategories() {
+      setIsShimmer(true);
       const data = await getCategories();
+      setIsShimmer(false);
       console.log(data);
       setProductData(data);
       setFilteredSearch(data);
@@ -159,7 +162,7 @@ export default function Categories() {
                 </tr>
               </thead>
               <tbody>
-                {FilteredSearch.length === 0 ? (
+                {isShimmer ? (
                   <>
                     {[...Array(6)].map((_, i) => (
                       <tr key={i}>

@@ -3,6 +3,9 @@ import { Axis3D, Plus, Search, Table, Trash, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Api_key } from "../../constants/ApiKey";
 import AddProduct from "../../components/layout/admin/AddProduct";
+import getCategories from "../../services/admin/Categories/categories.services";
+import Categories from "./Categories";
+import { faL } from "@fortawesome/free-solid-svg-icons";
 
 export default function Products() {
   const [searchInput, setSearchInput] = useState("");
@@ -11,13 +14,27 @@ export default function Products() {
   const [isAddProduct, setIsAddProduct] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [selectedId, setSelectedId] = useState([]);
+  const [isShimmer, setIsShimmer] = useState(false);
+  const [categoryData, setCategoryData] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("Categories");
 
   function handleSearch(e) {
     const value = e.target.value;
     setSearchInput(value);
+    const updatedSearch = productData.filter((item) =>
+      item.name.toLowerCase().includes(value.toLowerCase()),
+    );
+    setFilterData(updatedSearch);
   }
 
   useEffect(() => {
+    async function categoryDataDropDown() {
+      const categoriesData = await getCategories();
+      setCategoryData(categoriesData);
+    }
+    categoryDataDropDown();
+
+    setIsShimmer(true);
     axios
       .get("https://ohwdqklamwslzrhgkvup.supabase.co/rest/v1/products", {
         headers: {
@@ -27,6 +44,7 @@ export default function Products() {
         },
       })
       .then((res) => {
+        setIsShimmer(false);
         console.log(res.data);
         setProductData(res.data);
         setFilterData(res.data);
@@ -86,6 +104,26 @@ export default function Products() {
     });
   }
 
+  function handleReset() {
+    setFilterData(productData);
+    setSelectedCategory("Categories");
+    setSelectAll(false);
+    setSelectedId([]);
+    setFilterData(productData);
+  }
+
+  function handleCategoryDataFilter(e) {
+    let value = e.target.value;
+    setSelectedCategory(value);
+    if (value === "Categories") {
+      setFilterData(productData);
+      return;
+    }
+    const categoryFilter = productData.filter(
+      (item) => item.category_id == value,
+    );
+    setFilterData(categoryFilter);
+  }
   return (
     <div className="flex p-8 justify-between flex-col relative">
       <div className=" flex justify-between ">
@@ -122,10 +160,22 @@ export default function Products() {
               name=""
               id=""
               className="w-[300px] border border-black px-4 py-1 pr-12 "
+              onChange={handleCategoryDataFilter}
+              value={selectedCategory}
             >
               <option value="Categories">Categories</option>
+              {categoryData.map((item) => (
+                <option value={item.id} key={item.id}>
+                  {item.name}
+                </option>
+              ))}
             </select>
-            <button className="px-4 py-1 bg-gray-400  rounded-lg">Reset</button>
+            <button
+              className="px-4 py-1 bg-gray-400  rounded-lg"
+              onClick={handleReset}
+            >
+              Reset
+            </button>
           </div>
           <div>
             {
@@ -140,29 +190,49 @@ export default function Products() {
                       />
                     </th>
                     <th className="px-4 py-2">Prouduct Name</th>
+                    <th className="px-4 py-2">Prouduct Image</th>
                     <th className="px-4 py-2">Price</th>
                     <th className="px-4 py-2">Stock</th>
                     <th className="px-4 py-2">Category_id</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filterData.map((item) => (
-                    <tr className=" w-full border border-b-1" key={item.id}>
-                      <td className="px-4 py-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedId.includes(item.id)}
-                          onChange={(e) =>
-                            handleCheckBox(item.id, e.target.checked)
-                          }
-                        />
-                      </td>
-                      <td className="px-4 py-2">{item.name}</td>
-                      <td className="px-4 py-2">{item.price}</td>
-                      <td className="px-4 py-2">{item.stock}</td>
-                      <td className="px-4 py-2">{item.category_id}</td>
-                    </tr>
-                  ))}
+                  {isShimmer ? (
+                    <>
+                      {[...Array(6)].map((_, i) => (
+                        <tr key={i}>
+                          <td colSpan="4">
+                            <div className="shimmer h-10 w-full my-2"></div>
+                          </td>
+                        </tr>
+                      ))}
+                    </>
+                  ) : (
+                    filterData.map((item) => (
+                      <tr className=" w-full border border-b-1" key={item.id}>
+                        <td className="px-4 py-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedId.includes(item.id)}
+                            onChange={(e) =>
+                              handleCheckBox(item.id, e.target.checked)
+                            }
+                          />
+                        </td>
+                        <td className="px-4 py-2">{item.name}</td>
+                        <td className="px-4 py-2">
+                          <img
+                            src={item.image}
+                            alt=""
+                            className="w-[40px] h-[0px] object-contain"
+                          />
+                        </td>
+                        <td className="px-4 py-2">{item.price}</td>
+                        <td className="px-4 py-2">{item.stock}</td>
+                        <td className="px-4 py-2">{item.category_id}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             }
@@ -174,6 +244,7 @@ export default function Products() {
           <AddProduct
             setIsAddProduct={setIsAddProduct}
             setProductData={setProductData}
+            setFilterData={setFilterData}
           />
         )}
       </div>
